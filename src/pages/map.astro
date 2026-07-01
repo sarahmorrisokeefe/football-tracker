@@ -1,0 +1,32 @@
+---
+import Base from '../layouts/Base.astro';
+import Sidebar from '../components/ui/Sidebar.astro';
+import KitThemeProvider from '../components/islands/KitThemeProvider';
+import KitDropdown from '../components/islands/KitDropdown';
+import LiveBadge from '../components/islands/LiveBadge';
+import MapView from '../components/islands/MapView';
+---
+<Base title="Pitch — Nations Map">
+  <KitThemeProvider client:load />
+  <div style="display:flex;min-height:100vh;background:#070a0f;background-image:radial-gradient(1100px 620px at 78% -8%,var(--kit-soft),transparent 60%);color:#e9edf2">
+    <Sidebar active="map" />
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+      <header style="height:64px;flex:none;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:18px;padding:0 26px;position:sticky;top:0;background:rgba(8,11,16,.82);backdrop-filter:blur(10px);z-index:4">
+        <div style="display:flex;flex-direction:column;gap:1px">
+          <span style="font:600 9px/1 'JetBrains Mono',monospace;letter-spacing:2px;color:#5e6b7d;text-transform:uppercase">FIFA WORLD CUP 26</span>
+          <span style="font:600 22px/1 'Barlow Condensed',sans-serif;letter-spacing:.4px;text-transform:uppercase">Nations</span>
+        </div>
+        <div style="flex:1" />
+        <LiveBadge client:load />
+        <KitDropdown client:load />
+      </header>
+      <main style="flex:1;overflow:auto;padding:24px 26px 40px">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+          <h2 style="margin:0;font:700 16px/1 'Barlow Condensed',sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:#cdd6e2">32 Nations</h2>
+          <span style="font:500 12px/1 'Hanken Grotesk';color:#5e6b7d">Click a pin to scout a squad · your teams glow</span>
+        </div>
+        <MapView client:visible />
+      </main>
+    </div>
+  </div>
+</Base>

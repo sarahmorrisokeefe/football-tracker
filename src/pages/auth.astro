@@ -1,0 +1,130 @@
+---
+import Base from '../layouts/Base.astro';
+import KitThemeProvider from '../components/islands/KitThemeProvider';
+import TeamPicker from '../components/islands/TeamPicker';
+---
+<Base title="Pitch — Sign in">
+  <KitThemeProvider client:load />
+  <div style="min-height:100vh;background:#070a0f;background-image:radial-gradient(900px 600px at 60% -5%,var(--kit-soft),transparent 55%);color:#e9edf2;display:flex;flex-direction:column">
+
+    <!-- Header -->
+    <header style="height:64px;flex:none;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:18px;padding:0 26px;background:rgba(8,11,16,.82);backdrop-filter:blur(10px)">
+      <a href="/" style="display:flex;align-items:center;gap:9px;text-decoration:none;color:inherit">
+        <div style="width:28px;height:28px;borderRadius:7px;background:var(--kit);display:grid;place-items:center;font:700 13px/1 'JetBrains Mono',monospace;color:var(--kit-contrast)">P</div>
+        <span style="font:700 18px/1 'Barlow Condensed',sans-serif;letter-spacing:.8px;text-transform:uppercase">Pitch</span>
+      </a>
+    </header>
+
+    <!-- Auth panel -->
+    <div id="auth-section" style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px">
+      <div style="width:100%;max-width:400px;display:flex;flex-direction:column;gap:16px">
+        <div style="text-align:center;margin-bottom:8px">
+          <div style="font:700 32px/1 'Barlow Condensed',sans-serif;letter-spacing:.5px;margin-bottom:8px">Welcome to Pitch</div>
+          <div style="font:500 13px/1.5 'Hanken Grotesk';color:#6b7888">Sign in to pin your national teams and get kit-painted match days.</div>
+        </div>
+
+        <!-- Auth form -->
+        <div id="email-auth" style="background:rgba(14,18,26,.95);border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:28px;display:flex;flex-direction:column;gap:14px">
+          <button id="google-btn" style="width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#e9edf2;font:600 14px/1 'Hanken Grotesk';cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .15s">
+            <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+            Continue with Google
+          </button>
+
+          <div style="display:flex;align-items:center;gap:12">
+            <div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div>
+            <span style="font:500 11px/1 'Hanken Grotesk';color:#5e6b7d">or email</span>
+            <div style="flex:1;height:1px;background:rgba(255,255,255,.07)"></div>
+          </div>
+
+          <input id="email-input" type="email" placeholder="your@email.com" style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.3);color:#e9edf2;font:500 14px/1 'Hanken Grotesk';outline:none;box-sizing:border-box" />
+
+          <button id="magic-btn" style="width:100%;padding:12px;border-radius:10px;background:var(--kit);color:var(--kit-contrast);font:700 14px/1 'Hanken Grotesk';border:none;cursor:pointer;transition:opacity .15s">
+            Send magic link
+          </button>
+
+          <div id="auth-msg" style="display:none;text-align:center;padding:12px;border-radius:10px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);font:500 13px/1.4 'Hanken Grotesk';color:#10b981"></div>
+          <div id="auth-err" style="display:none;text-align:center;padding:12px;border-radius:10px;background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.25);font:500 13px/1.4 'Hanken Grotesk';color:#f43f5e"></div>
+        </div>
+
+        <div style="text-align:center;font:500 11px/1.5 'Hanken Grotesk';color:#4a5568">
+          No account needed — magic link creates one automatically.
+        </div>
+      </div>
+    </div>
+
+    <!-- Team picker (shown post-auth) -->
+    <div id="picker-section" style="display:none;flex:1">
+      <TeamPicker client:load />
+    </div>
+  </div>
+
+  <script>
+    import { createClient } from '@supabase/supabase-js';
+
+    const supabase = createClient(
+      (import.meta as any).env?.PUBLIC_SUPABASE_URL ?? '',
+      (import.meta as any).env?.PUBLIC_SUPABASE_ANON_KEY ?? ''
+    );
+
+    const googleBtn = document.getElementById('google-btn') as HTMLButtonElement;
+    const magicBtn = document.getElementById('magic-btn') as HTMLButtonElement;
+    const emailInput = document.getElementById('email-input') as HTMLInputElement;
+    const msgEl = document.getElementById('auth-msg') as HTMLDivElement;
+    const errEl = document.getElementById('auth-err') as HTMLDivElement;
+    const authSection = document.getElementById('auth-section') as HTMLDivElement;
+    const pickerSection = document.getElementById('picker-section') as HTMLDivElement;
+
+    function showMsg(text: string) {
+      msgEl.textContent = text;
+      msgEl.style.display = 'block';
+      errEl.style.display = 'none';
+    }
+    function showErr(text: string) {
+      errEl.textContent = text;
+      errEl.style.display = 'block';
+      msgEl.style.display = 'none';
+    }
+
+    async function checkSession() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        authSection.style.display = 'none';
+        pickerSection.style.display = 'flex';
+        pickerSection.style.flex = '1';
+      }
+    }
+
+    checkSession();
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        authSection.style.display = 'none';
+        pickerSection.style.display = 'flex';
+        pickerSection.style.flex = '1';
+      }
+    });
+
+    googleBtn.addEventListener('click', async () => {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin + '/auth' },
+      });
+      if (error) showErr(error.message);
+    });
+
+    magicBtn.addEventListener('click', async () => {
+      const email = emailInput.value.trim();
+      if (!email) { showErr('Please enter your email.'); return; }
+      magicBtn.disabled = true;
+      magicBtn.textContent = 'Sending…';
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.origin + '/auth' },
+      });
+      magicBtn.disabled = false;
+      magicBtn.textContent = 'Send magic link';
+      if (error) showErr(error.message);
+      else showMsg('Check your inbox — magic link sent!');
+    });
+  </script>
+</Base>

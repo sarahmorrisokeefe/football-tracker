@@ -1,0 +1,60 @@
+---
+import Base from '../layouts/Base.astro';
+import KitThemeProvider from '../components/islands/KitThemeProvider';
+import KitDropdown from '../components/islands/KitDropdown';
+import LiveMatchTicker from '../components/islands/LiveMatchTicker';
+import YourTeams from '../components/islands/YourTeams';
+import TodayFeed from '../components/islands/TodayFeed';
+import LiveBadge from '../components/islands/LiveBadge';
+import Sidebar from '../components/ui/Sidebar.astro';
+
+const today = new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
+---
+<Base title="Pitch — Mission Control">
+  <KitThemeProvider client:load />
+
+  <div id="app-root" style="display:flex;min-height:100vh;background:#070a0f;background-image:radial-gradient(1100px 620px at 78% -8%,var(--kit-soft),transparent 60%),radial-gradient(900px 520px at 8% 108%,rgba(255,255,255,.025),transparent 55%);color:#e9edf2">
+
+    <Sidebar active="home" />
+
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+      <header style="height:64px;flex:none;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:18px;padding:0 26px;position:sticky;top:0;background:rgba(8,11,16,.82);backdrop-filter:blur(10px);z-index:4">
+        <div style="display:flex;flex-direction:column;gap:1px;min-width:0">
+          <span style="font:600 9px/1 'JetBrains Mono',monospace;letter-spacing:2px;color:#5e6b7d;text-transform:uppercase">FIFA WORLD CUP 26</span>
+          <span style="font:600 22px/1 'Barlow Condensed',sans-serif;letter-spacing:.4px;text-transform:uppercase">Mission Control</span>
+        </div>
+        <div style="flex:1" />
+        <LiveBadge client:load />
+        <KitDropdown client:load />
+      </header>
+
+      <main style="flex:1;min-width:0;overflow:auto;padding:24px 26px 60px;max-width:1380px">
+
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:13px">
+          <span style="width:8px;height:8px;border-radius:50%;background:#ff4d4f;animation:blink 1.3s infinite;display:inline-block"></span>
+          <h2 style="margin:0;font:700 15px/1 'Barlow Condensed',sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:#cdd6e2">Live Now</h2>
+          <span style="font:500 12px/1 'Hanken Grotesk';color:#5e6b7d">Matches in play right now</span>
+        </div>
+        <LiveMatchTicker favTeamIds={[]} client:load />
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:30px;align-items:start">
+          <div style="min-width:0">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:13px">
+              <h2 style="margin:0;font:700 15px/1 'Barlow Condensed',sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:#cdd6e2">Today's Matches</h2>
+              <span style="font:500 12px/1 'Hanken Grotesk';color:#5e6b7d">{today}</span>
+            </div>
+            <TodayFeed client:load />
+          </div>
+          <div style="min-width:0">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:13px">
+              <span style="width:14px;height:14px;border-radius:4px;background:var(--kit);box-shadow:0 0 12px -2px var(--kit-glow);display:inline-block"></span>
+              <h2 style="margin:0;font:700 15px/1 'Barlow Condensed',sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:#cdd6e2">Your Teams</h2>
+            </div>
+            <YourTeams client:load />
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+</Base>

@@ -1,0 +1,50 @@
+---
+import Base from '../../layouts/Base.astro';
+import Sidebar from '../../components/ui/Sidebar.astro';
+import KitThemeProvider from '../../components/islands/KitThemeProvider';
+import KitDropdown from '../../components/islands/KitDropdown';
+import LiveBadge from '../../components/islands/LiveBadge';
+import MatchDetail from '../../components/islands/MatchDetail';
+
+const { id } = Astro.params;
+
+// SSR: pre-fetch fixture data for meta tags
+let fixture: any = null;
+try {
+  const apiKey = import.meta.env.API_FOOTBALL_KEY;
+  if (apiKey) {
+    const r = await fetch(`https://v3.football.api-sports.io/fixtures?id=${id}`, {
+      headers: { 'x-apisports-key': apiKey },
+    });
+    const json = await r.json();
+    fixture = json?.response?.[0];
+  }
+} catch { /* no fixture meta */ }
+
+const home = fixture?.teams?.home?.name ?? 'Home';
+const away = fixture?.teams?.away?.name ?? 'Away';
+const title = `${home} vs ${away} — Pitch`;
+---
+<Base title={title}>
+  <KitThemeProvider client:load />
+  <div style="display:flex;min-height:100vh;background:#070a0f;background-image:radial-gradient(1100px 620px at 78% -8%,var(--kit-soft),transparent 60%);color:#e9edf2">
+    <Sidebar active="scores" />
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+      <header style="height:64px;flex:none;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:18px;padding:0 26px;position:sticky;top:0;background:rgba(8,11,16,.82);backdrop-filter:blur(10px);z-index:4">
+        <a href="/match" style="display:flex;align-items:center;gap:8px;color:#6b7888;text-decoration:none;font:500 12px/1 'Hanken Grotesk'">
+          ← Scores
+        </a>
+        <div style="display:flex;flex-direction:column;gap:1px">
+          <span style="font:600 9px/1 'JetBrains Mono',monospace;letter-spacing:2px;color:#5e6b7d;text-transform:uppercase">FIFA WORLD CUP 26</span>
+          <span style="font:600 22px/1 'Barlow Condensed',sans-serif;letter-spacing:.4px;text-transform:uppercase">{home} vs {away}</span>
+        </div>
+        <div style="flex:1" />
+        <LiveBadge client:load />
+        <KitDropdown client:load />
+      </header>
+      <main style="flex:1;overflow:auto">
+        <MatchDetail id={id!} client:load />
+      </main>
+    </div>
+  </div>
+</Base>
