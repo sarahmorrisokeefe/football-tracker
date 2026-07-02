@@ -1,16 +1,15 @@
 import type { APIRoute } from 'astro';
-import { getFixturesByDate, getStandings } from '../../lib/api-football';
+import { getAllFixtures } from '../../lib/api-football';
+import { groupKnockoutFixtures } from '../../lib/bracket';
 
-// Returns all WC fixtures grouped by round for the bracket view
 export const GET: APIRoute = async () => {
   try {
-    // Fetch all fixtures without date filter by querying broadly
-    const standings = await getStandings(1);
-
-    return new Response(JSON.stringify({ standings }), {
+    const fixtures = await getAllFixtures();
+    const data = groupKnockoutFixtures(fixtures);
+    return new Response(JSON.stringify(data), {
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 's-maxage=30',
+        'Cache-Control': 's-maxage=1800',
       },
     });
   } catch (err) {
