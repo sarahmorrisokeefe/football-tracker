@@ -1,11 +1,12 @@
 import type { APIRoute } from 'astro';
-import { getAllFixtures } from '../../lib/api-football';
-import { groupKnockoutFixtures } from '../../lib/bracket';
+import { getTeamFixtures } from '../../../lib/api-football';
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async ({ params }) => {
+  const id = Number(params.id);
+  if (!id) return new Response('Not found', { status: 404 });
+
   try {
-    const fixtures = await getAllFixtures();
-    const data = groupKnockoutFixtures(fixtures);
+    const data = await getTeamFixtures(id);
     return new Response(JSON.stringify(data), {
       headers: {
         'Content-Type': 'application/json',

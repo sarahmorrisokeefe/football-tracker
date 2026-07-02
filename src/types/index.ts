@@ -54,3 +54,11 @@ export interface UserFav {
   kitPrimary: string;
   kitAccent: string;
 }
+
+export interface BracketData {
+  r32: Fixture[];
+  r16: Fixture[];
+  qf: Fixture[];
+  sf: Fixture[];
+  final: Fixture[];
+}
