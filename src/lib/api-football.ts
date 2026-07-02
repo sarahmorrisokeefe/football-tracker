@@ -21,7 +21,11 @@ export async function cachedFetch<T>(
     return cached.data as T;
   }
   const data = await fn();
-  _cache.set(key, { data, expires: Date.now() + ttlMs });
+  // Don't cache empty arrays — a transient empty response would poison the cache
+  // for the full TTL, hiding real data when it becomes available
+  if (!Array.isArray(data) || data.length > 0) {
+    _cache.set(key, { data, expires: Date.now() + ttlMs });
+  }
   return data;
 }
 

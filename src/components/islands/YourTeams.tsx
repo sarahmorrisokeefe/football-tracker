@@ -16,7 +16,7 @@ function NextMatch({ teamId, kitAccent }: { teamId: number; kitAccent: string })
 
   useEffect(() => {
     fetch(`/api/team-fixtures/${teamId}`)
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then((fixtures: Fixture[]) => {
         if (!Array.isArray(fixtures)) { setNext(null); return; }
         const upcoming = fixtures
