@@ -54,28 +54,35 @@ export default function MapView() {
         map.setPaintProperty('background', 'background-color', '#07090f');
 
         TEAMS.filter(t => t.lon !== undefined && t.lat !== undefined).forEach(team => {
-          // Create a DOM element for the marker
+          // Outer container: Mapbox GL v3 applies its translate() positioning transform
+          // directly to this element. We must NOT set transform on it ourselves.
           const el = document.createElement('div');
+          el.style.cssText = 'width:27px;height:19px;cursor:pointer;';
+
+          // Inner element: safe to scale on hover because Mapbox doesn't touch it.
+          const inner = document.createElement('div');
           const isFav = favIds.has(team.id);
-          el.style.cssText = `
+          inner.style.cssText = `
             width:27px;height:19px;border-radius:5px;display:grid;place-items:center;
-            font:700 8px/1 'JetBrains Mono',monospace;cursor:pointer;
+            font:700 8px/1 'JetBrains Mono',monospace;
             background:${team.kitPrimary};color:${team.kitAccent};
             box-shadow:${isFav ? '0 0 0 1.5px var(--kit),0 0 13px -2px var(--kit-glow),0 0 0 3px rgba(0,0,0,.45)' : '0 0 0 1.5px rgba(255,255,255,.28),0 0 0 3.5px rgba(0,0,0,.5),0 2px 7px rgba(0,0,0,.6)'};
-            transition:transform .14s;z-index:10;
+            transition:transform .14s;
           `;
-          el.textContent = team.code;
-          el.title = team.name;
+          inner.textContent = team.code;
+          inner.title = team.name;
+          el.appendChild(inner);
 
-          el.addEventListener('mouseenter', () => { el.style.transform = 'scale(1.18)'; });
-          el.addEventListener('mouseleave', () => { el.style.transform = 'scale(1)'; });
+          el.addEventListener('mouseenter', () => { inner.style.transform = 'scale(1.18)'; });
+          el.addEventListener('mouseleave', () => { inner.style.transform = ''; });
           el.addEventListener('click', () => openPanel(team));
 
           const marker = new Mapbox.Marker({ element: el })
             .setLngLat([team.lon!, team.lat!])
             .addTo(map);
 
-          markersRef.current.push({ marker, el, teamId: team.id });
+          // Store inner so the favs-refresh effect can update its box-shadow.
+          markersRef.current.push({ marker, el: inner, teamId: team.id });
         });
       });
     });

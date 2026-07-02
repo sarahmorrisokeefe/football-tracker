@@ -31,6 +31,7 @@ export async function cachedFetch<T>(
 
 async function apiFetch(path: string, params: Record<string, string | number> = {}) {
   const key = import.meta.env.API_FOOTBALL_KEY;
+  if (!key) throw new Error('API_FOOTBALL_KEY is not set — add it to your Vercel environment variables');
   const url = new URL(BASE + path);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, String(v)));
 
