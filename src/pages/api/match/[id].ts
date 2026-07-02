@@ -11,15 +11,17 @@ export const GET: APIRoute = async ({ params }) => {
   if (!id) return new Response('Not found', { status: 404 });
 
   try {
-    const [fixtures, lineups, events, stats] = await Promise.all([
+    const [fixtures, lineups, events, statistics] = await Promise.all([
       getFixtureById(id),
       getFixtureLineups(id),
       getFixtureEvents(id),
       getFixtureStats(id),
     ]);
 
+    // Spread fixtures[0] so MatchDetail can destructure { fixture, teams, goals }
+    // at the top level — nesting under a "fixture" key broke that destructuring.
     return new Response(
-      JSON.stringify({ fixture: fixtures[0], lineups, events, stats }),
+      JSON.stringify({ ...fixtures[0], lineups, events, statistics }),
       {
         headers: {
           'Content-Type': 'application/json',
