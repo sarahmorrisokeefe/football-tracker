@@ -43,10 +43,16 @@ async function apiFetch(path: string, params: Record<string, string | number> = 
     },
   });
 
-  if (!res.ok) throw new Error(`API-Football ${path} → ${res.status}`);
+  if (!res.ok) {
+    const err = new Error(`API-Football ${path} → ${res.status}`);
+    console.error('[api-football]', err.message);
+    throw err;
+  }
   const json = await res.json();
   if (json.errors && Object.keys(json.errors).length) {
-    throw new Error(`API-Football error: ${JSON.stringify(json.errors)}`);
+    const err = new Error(`API-Football error: ${JSON.stringify(json.errors)}`);
+    console.error('[api-football]', err.message);
+    throw err;
   }
   return json.response;
 }
