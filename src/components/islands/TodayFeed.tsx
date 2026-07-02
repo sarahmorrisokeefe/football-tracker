@@ -33,13 +33,17 @@ function statusColor(f: Fixture) {
 export default function TodayFeed() {
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    const date = new Date().toISOString().slice(0, 10);
+    // Use local date, not toISOString() which returns UTC — in evening US timezones
+    // toISOString() would already be the next UTC day.
+    const d = new Date();
+    const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     fetch(`/api/fixtures?date=${date}`)
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(data => setFixtures(Array.isArray(data) ? data : []))
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
 
@@ -49,6 +53,14 @@ export default function TodayFeed() {
         {[1, 2, 3].map(i => (
           <div key={i} style={{ height: 72, borderRadius: 13, background: 'rgba(20,26,35,.7)', border: '1px solid rgba(255,255,255,.06)', animation: 'blink 1.3s infinite' }} />
         ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: 30, borderRadius: 14, border: '1px dashed rgba(255,255,255,.1)', textAlign: 'center', font: "500 13px/1.5 'Hanken Grotesk'", color: '#6b7888' }}>
+        Couldn't load today's fixtures — try again shortly.
       </div>
     );
   }
