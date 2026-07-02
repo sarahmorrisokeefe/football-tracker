@@ -5,21 +5,16 @@ import KitThemeProvider from '../../components/islands/KitThemeProvider';
 import KitDropdown from '../../components/islands/KitDropdown';
 import LiveBadge from '../../components/islands/LiveBadge';
 import MatchDetail from '../../components/islands/MatchDetail';
+import { getFixtureById } from '../../lib/api-football';
 
 const { id } = Astro.params;
 
-// SSR: pre-fetch fixture data for meta tags
+// SSR: pre-fetch fixture data for page title meta tags
 let fixture: any = null;
 try {
-  const apiKey = import.meta.env.API_FOOTBALL_KEY;
-  if (apiKey) {
-    const r = await fetch(`https://v3.football.api-sports.io/fixtures?id=${id}`, {
-      headers: { 'x-apisports-key': apiKey },
-    });
-    const json = await r.json();
-    fixture = json?.response?.[0];
-  }
-} catch { /* no fixture meta */ }
+  const fixtures = await getFixtureById(Number(id));
+  fixture = fixtures[0] ?? null;
+} catch { /* no fixture meta, title falls back to defaults */ }
 
 const home = fixture?.teams?.home?.name ?? 'Home';
 const away = fixture?.teams?.away?.name ?? 'Away';
