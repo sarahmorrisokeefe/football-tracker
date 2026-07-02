@@ -15,18 +15,27 @@ function teamCode(name: string) {
   return t?.code ?? name.slice(0, 3).toUpperCase();
 }
 
+function statusRank(short: string): number {
+  if (['1H', '2H', 'HT', 'ET', 'P', 'LIVE'].includes(short)) return 0; // live first
+  if (short === 'NS') return 1;                                           // upcoming second
+  return 2;                                                               // finished last
+}
+
 function statusLabel(f: Fixture) {
   const s = f.fixture.status.short;
-  if (['1H', '2H', 'HT', 'LIVE'].includes(s)) return `LIVE ${f.fixture.status.elapsed}'`;
-  if (s === 'FT') return 'FT';
-  if (s === 'NS') return new Date(f.fixture.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  if (['1H', '2H', 'HT', 'ET', 'P', 'LIVE'].includes(s)) return `LIVE ${f.fixture.status.elapsed ?? ''}′`;
+  if (['FT', 'AET', 'PEN'].includes(s)) return s;
+  if (s === 'NS') {
+    // Use browser locale — gives local timezone + locale-appropriate 12/24hr format
+    return new Date(f.fixture.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
   return s;
 }
 
 function statusColor(f: Fixture) {
   const s = f.fixture.status.short;
-  if (['1H', '2H', 'HT', 'LIVE'].includes(s)) return '#ff8486';
-  if (s === 'FT') return '#7c8a9c';
+  if (['1H', '2H', 'HT', 'ET', 'P', 'LIVE'].includes(s)) return '#ff8486';
+  if (['FT', 'AET', 'PEN'].includes(s)) return '#7c8a9c';
   return 'var(--kit)';
 }
 
@@ -36,13 +45,44 @@ export default function TodayFeed() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    // Use local date, not toISOString() which returns UTC — in evening US timezones
-    // toISOString() would already be the next UTC day.
     const d = new Date();
-    const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    fetch(`/api/fixtures?date=${date}`)
-      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then(data => setFixtures(Array.isArray(data) ? data : []))
+
+    // Local calendar date (what the user thinks of as "today")
+    const localDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+    // Also fetch the next UTC date — a game at 9pm ET has utcDate = tomorrow UTC,
+    // so without this we'd miss it entirely.
+    const tomorrowUTC = new Date(d.getTime() + 86400000).toISOString().slice(0, 10);
+
+    const urls = [...new Set([localDate, tomorrowUTC])].map(date => `/api/fixtures?date=${date}`);
+
+    Promise.all(
+      urls.map(url => fetch(url).then(r => { if (!r.ok) throw new Error(); return r.json(); }))
+    )
+      .then(results => {
+        const seen = new Set<number>();
+        const all = (results.flat() as Fixture[]).filter(f => {
+          if (!f?.fixture?.id || seen.has(f.fixture.id)) return false;
+          seen.add(f.fixture.id);
+          // Keep only games whose LOCAL kickoff falls on today's local calendar day
+          const kickoff = new Date(f.fixture.date);
+          return (
+            kickoff.getFullYear() === d.getFullYear() &&
+            kickoff.getMonth() === d.getMonth() &&
+            kickoff.getDate() === d.getDate()
+          );
+        });
+
+        // Sort: live → upcoming (chronological) → finished
+        all.sort((a, b) => {
+          const ra = statusRank(a.fixture.status.short);
+          const rb = statusRank(b.fixture.status.short);
+          if (ra !== rb) return ra - rb;
+          return new Date(a.fixture.date).getTime() - new Date(b.fixture.date).getTime();
+        });
+
+        setFixtures(all);
+      })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
@@ -80,7 +120,6 @@ export default function TodayFeed() {
         const at = teamInfo(f.teams.away.name);
         const hc = teamCode(f.teams.home.name);
         const ac = teamCode(f.teams.away.name);
-        const isLive = ['1H', '2H', 'HT', 'LIVE'].includes(f.fixture.status.short);
 
         return (
           <motion.div
@@ -88,7 +127,7 @@ export default function TodayFeed() {
             whileHover={{ borderColor: 'var(--kit)', background: 'rgba(26,33,44,.9)' }}
             onClick={() => window.location.href = `/match/${f.fixture.id}`}
             style={{
-              display: 'grid', gridTemplateColumns: '96px minmax(0,1fr) 60px',
+              display: 'grid', gridTemplateColumns: '96px minmax(0,1fr) 80px',
               alignItems: 'center', gap: 16, padding: '13px 18px',
               borderRadius: 13, background: 'rgba(20,26,35,.7)',
               border: '1px solid rgba(255,255,255,.06)', cursor: 'pointer', transition: 'all .15s',
@@ -117,7 +156,9 @@ export default function TodayFeed() {
                 </span>
               </div>
             </div>
-            <span style={{ font: "500 10px/1.3 'Hanken Grotesk'", color: '#5e6b7d', textAlign: 'right' }}>{f.fixture.venue.city}</span>
+            <span style={{ font: "500 10px/1.3 'Hanken Grotesk'", color: '#5e6b7d', textAlign: 'right' }}>
+              {f.fixture.venue.name || f.league.round}
+            </span>
           </motion.div>
         );
       })}
