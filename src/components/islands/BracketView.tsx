@@ -37,7 +37,7 @@ function BracketCard({ match, favCodes, kitCode, size = 'sm' }: BracketCardProps
   const tbd = isTbd(match);
   const home = teamDisplay(match.teams.home.name);
   const away = teamDisplay(match.teams.away.name);
-  const done = match.fixture.status.short === 'FT';
+  const done = ['FT', 'AET', 'PEN'].includes(match.fixture.status.short);
   const homeWon = done && (match.goals.home ?? 0) > (match.goals.away ?? 0);
   const awayWon = done && (match.goals.away ?? 0) > (match.goals.home ?? 0);
   const homeThemed = !tbd && home.code === kitCode;
