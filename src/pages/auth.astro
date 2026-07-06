@@ -104,10 +104,12 @@ import TeamPicker from '../components/islands/TeamPicker';
       }
     });
 
+    const siteUrl = (import.meta as any).env?.PUBLIC_SITE_URL?.replace(/\/$/, '') || window.location.origin;
+
     googleBtn.addEventListener('click', async () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin + '/auth' },
+        options: { redirectTo: siteUrl + '/auth' },
       });
       if (error) showErr(error.message);
     });
@@ -119,7 +121,7 @@ import TeamPicker from '../components/islands/TeamPicker';
       magicBtn.textContent = 'Sending…';
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: window.location.origin + '/auth' },
+        options: { emailRedirectTo: siteUrl + '/auth' },
       });
       magicBtn.disabled = false;
       magicBtn.textContent = 'Send magic link';
